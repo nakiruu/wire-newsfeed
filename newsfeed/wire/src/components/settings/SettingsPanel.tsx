@@ -115,15 +115,22 @@ export function SettingsPanel({ open, onClose }: { open: boolean; onClose(): voi
     return res.ok
   }
 
-  if (!open) return null
-
   return (
-    <div className="fixed inset-0 z-50 flex justify-end" role="dialog" aria-label="Settings">
+    <div
+      className={`fixed inset-0 z-50 flex justify-end transition-opacity duration-[150ms] ease-linear ${open ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
+      {...(open ? { role: 'dialog', 'aria-label': 'Settings' } : {})}
+    >
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/50" onClick={onClose} aria-hidden="true" />
+      <div
+        className={`absolute inset-0 bg-black/50 transition-opacity duration-[150ms] ${open ? 'opacity-100' : 'opacity-0'}`}
+        onClick={onClose}
+        aria-hidden="true"
+      />
 
       {/* Panel */}
-      <div className="relative w-[400px] h-full bg-[#111111] border-l border-[#1F1F1F] overflow-y-auto">
+      <div
+        className={`relative w-[400px] h-full bg-[#111111] border-l border-[#1F1F1F] overflow-y-auto flex flex-col transition-transform duration-[150ms] ease-linear ${open ? 'translate-x-0' : 'translate-x-full'}`}
+      >
         {/* Header */}
         <div className="sticky top-0 flex items-center justify-between px-5 py-4 bg-[#111111] border-b border-[#1F1F1F] z-10">
           <h2 className="text-[0.875rem] font-semibold text-[#EDEDED]">Settings</h2>
@@ -180,6 +187,16 @@ export function SettingsPanel({ open, onClose }: { open: boolean; onClose(): voi
               placeholder="Your FMP API key"
               validate={validateFmp}
             />
+            <div className="mt-3 space-y-1">
+              <label className="text-[0.75rem] text-[#555555]">Poll interval (s)</label>
+              <Input
+                type="number"
+                min={10}
+                value={providers.FMP.poll_interval_ms / 1000}
+                onChange={e => useConfigStore.getState().setPollInterval('FMP', Number(e.target.value) * 1000)}
+                aria-label="FMP poll interval"
+              />
+            </div>
           </section>
 
           {/* Alpaca */}
@@ -199,6 +216,16 @@ export function SettingsPanel({ open, onClose }: { open: boolean; onClose(): voi
               hint="Format: your-key-id:your-secret-key"
               validate={validateAlpaca}
             />
+            <div className="mt-3 space-y-1">
+              <label className="text-[0.75rem] text-[#555555]">Poll interval (s)</label>
+              <Input
+                type="number"
+                min={10}
+                value={providers.ALPACA.poll_interval_ms / 1000}
+                onChange={e => useConfigStore.getState().setPollInterval('ALPACA', Number(e.target.value) * 1000)}
+                aria-label="Alpaca poll interval"
+              />
+            </div>
           </section>
 
           {/* RSS Feeds */}

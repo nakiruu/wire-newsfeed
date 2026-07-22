@@ -13,6 +13,7 @@ interface ConfigState {
   setProviderConfig(source: ProviderSource, config: Partial<ProviderConfig>): void
   setProviderError(source: ProviderSource, error: string): void
   clearProviderError(source: ProviderSource): void
+  setPollInterval(source: ProviderSource, ms: number): void
   addWatchlistSymbol(symbol: string): void
   removeWatchlistSymbol(symbol: string): void
   setDisplayDensity(density: 'compact' | 'comfortable'): void
@@ -78,6 +79,11 @@ export const useConfigStore = create<ConfigState>((set, get) => ({
     set(s => ({
       providers: { ...s.providers, [source]: { ...s.providers[source], lastError: undefined, lastErrorAt: undefined, consecutiveFailures: 0 } },
     }))
+  },
+
+  setPollInterval(source, ms) {
+    set(s => ({ providers: { ...s.providers, [source]: { ...s.providers[source], poll_interval_ms: ms } } }))
+    persist(get())
   },
 
   addWatchlistSymbol(symbol) {
