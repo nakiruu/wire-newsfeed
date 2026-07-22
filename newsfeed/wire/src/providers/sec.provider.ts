@@ -19,9 +19,13 @@ export class SECProvider implements NewsProvider {
   async fetch(_params: FetchParams): Promise<Article[]> {
     const now = new Date().toISOString()
     const results: Article[] = []
+    const headers = {
+      'User-Agent': 'Wire/1.0 (self-hosted news terminal; contact@example.com)',
+      'Accept': 'application/atom+xml',
+    }
     await Promise.allSettled(SEC_FEEDS.map(async (feedUrl) => {
       try {
-        const res = await proxyFetch(feedUrl)
+        const res = await proxyFetch(feedUrl, { headers })
         if (!res.ok) return
         const feed = await parser.parseString(await res.text())
         for (const item of feed.items ?? []) {

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from 'react'
+import { useEffect, useRef, useState, useCallback, useMemo } from 'react'
 import { Header } from './Header'
 import { createCoordinator } from '../../services/coordinator'
 import type { ProviderCoordinator } from '../../services/coordinator'
@@ -17,7 +17,28 @@ export function Shell({ children, onSearchOpen, onSettingsOpen, onCommandPalette
   const coordinatorRef = useRef<ProviderCoordinator | null>(null)
   const [lastUpdatedAt, setLastUpdatedAt] = useState<Date | null>(null)
   const { focusedIndex, setFocusedIndex, markRead, toggleBookmark } = useFeedStore()
-  const filteredArticles = useFilterStore(s => s.getFilteredArticles())
+
+  // Subscribe to primitives and derive filtered articles in render to avoid
+  // returning a new array reference from the selector on every call (React 19 warning).
+  const activeCategory = useFilterStore(s => s.activeCategory)
+  const activeSources = useFilterStore(s => s.activeSources)
+  const searchQuery = useFilterStore(s => s.searchQuery)
+  const allArticles = useFeedStore(s => s.articles)
+
+  const filteredArticles = useMemo(() => {
+    let result = allArticles
+    if (activeCategory) result = result.filter(a => a.category === activeCategory)
+    result = result.filter(a => activeSources.has(a.source))
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase()
+      result = result.filter(a =>
+        a.title.toLowerCase().includes(q) ||
+        a.summary.toLowerCase().includes(q) ||
+        a.symbols.some(s => s.toLowerCase().includes(q))
+      )
+    }
+    return result
+  }, [allArticles, activeCategory, activeSources, searchQuery])
 
   useEffect(() => {
     const coordinator = createCoordinator()
