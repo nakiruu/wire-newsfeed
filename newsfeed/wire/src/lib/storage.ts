@@ -30,6 +30,6 @@ export function saveConfigStore(config: unknown): void {
 export function loadConfigStore(): unknown {
   try {
     const raw = localStorage.getItem('wire:config')
-    return raw ? JSON.parse(raw) : undefined
-  } catch { return undefined }
+    return raw ? JSON.parse(raw) : null
+  } catch { return null }
 }
