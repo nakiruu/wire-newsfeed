@@ -3,15 +3,21 @@ import { Shell } from './components/layout/Shell'
 import { ArticleFeed } from './components/feed/ArticleFeed'
 import { Sidebar } from './components/layout/Sidebar'
 import { SettingsPanel } from './components/settings/SettingsPanel'
+import { CommandPalette } from './components/search/CommandPalette'
 import { useFeedStore } from './stores/feedStore'
 
 export default function App() {
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [paletteOpen, setPaletteOpen] = useState(false)
   const focusedIndex = useFeedStore(s => s.focusedIndex)
 
   return (
     <>
-      <Shell onSearchOpen={() => {}} onSettingsOpen={() => setSettingsOpen(true)}>
+      <Shell
+        onSearchOpen={() => setPaletteOpen(true)}
+        onSettingsOpen={() => setSettingsOpen(true)}
+        onCommandPaletteOpen={() => setPaletteOpen(true)}
+      >
         <main className="flex-1 min-w-0 border-r border-[#1F1F1F]">
           <ArticleFeed focusedIndex={focusedIndex} onConfigureClick={() => setSettingsOpen(true)} />
         </main>
@@ -20,6 +26,7 @@ export default function App() {
         </aside>
       </Shell>
       <SettingsPanel open={settingsOpen} onClose={() => setSettingsOpen(false)} />
+      <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />
     </>
   )
 }
