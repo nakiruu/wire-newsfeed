@@ -15,6 +15,8 @@ interface ConfigState {
   clearProviderError(source: ProviderSource): void
   addWatchlistSymbol(symbol: string): void
   removeWatchlistSymbol(symbol: string): void
+  setDisplayDensity(density: 'compact' | 'comfortable'): void
+  setAutoRefresh(value: boolean): void
 }
 
 function defaultProviders(): Record<ProviderSource, ProviderConfig> {
@@ -85,6 +87,16 @@ export const useConfigStore = create<ConfigState>((set, get) => ({
 
   removeWatchlistSymbol(symbol) {
     set(s => ({ watchlistSymbols: s.watchlistSymbols.filter(sym => sym !== symbol.toUpperCase()) }))
+    persist(get())
+  },
+
+  setDisplayDensity(density) {
+    set({ displayDensity: density })
+    persist(get())
+  },
+
+  setAutoRefresh(value) {
+    set({ autoRefresh: value })
     persist(get())
   },
 }))
