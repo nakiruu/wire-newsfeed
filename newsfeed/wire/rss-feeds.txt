@@ -1,0 +1,27 @@
+# Wire RSS Feeds
+# One URL per line. Lines starting with # are ignored.
+# Rebuild the Docker image after making changes.
+
+# News wires
+https://feeds.reuters.com/reuters/businessNews
+
+# Wall Street Journal
+https://feeds.a.dj.com/rss/RSSMarketsMain.xml
+
+# MarketWatch
+https://feeds.content.dowjones.io/public/rss/mw_realtimeheadlines
+
+# CNBC
+https://www.cnbc.com/id/100003114/device/rss/rss.html
+
+# Seeking Alpha
+https://seekingalpha.com/feed.xml
+
+# The Motley Fool
+https://www.fool.com/a/feeds/foolwatch?format=rss2&id=foolwatch&apikey=foolwatch
+
+# Barron's
+https://www.barrons.com/xml/rss/3_7551.xml
+
+# Bloomberg Markets (unofficial mirror — replace with your own if needed)
+# https://example.com/bloomberg-markets-rss

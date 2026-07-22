@@ -1,12 +1,10 @@
 import type { ProviderSource } from './hash'
+import feedsRaw from '../../rss-feeds.txt?raw'
 
-export const DEFAULT_RSS_FEEDS: string[] = [
-  'https://feeds.reuters.com/reuters/businessNews',
-  'https://feeds.content.dowjones.io/public/rss/mw_realtimeheadlines',
-  'https://www.cnbc.com/id/100003114/device/rss/rss.html',
-  'https://feeds.a.dj.com/rss/RSSMarketsMain.xml',
-  'https://seekingalpha.com/feed.xml',
-]
+export const DEFAULT_RSS_FEEDS: string[] = feedsRaw
+  .split('\n')
+  .map(l => l.trim())
+  .filter(l => l.length > 0 && !l.startsWith('#'))
 
 export const CATEGORIES = [
   'earnings', 'macro', 'm&a', 'sec-filing', 'press-release', 'ipo', 'analyst',
