@@ -14,7 +14,7 @@ const parser = new Parser()
 export class SECProvider implements NewsProvider {
   name = 'SEC' as const
   poll_interval_ms = 600_000
-  rate_limit = { requests: 2, window_ms: 60_000 }
+  rate_limit = { requests: 10, window_ms: 600_000 }
 
   async fetch(_params: FetchParams): Promise<Article[]> {
     const now = new Date().toISOString()
@@ -37,7 +37,7 @@ export class SECProvider implements NewsProvider {
             symbols: [],
             published_at: item.pubDate ? new Date(item.pubDate).toISOString() : now,
             ingested_at: now,
-            category: 'sec-filing',
+            category: 'SEC Filings',
           })
         }
       } catch { /* individual feed failure — continue */ }

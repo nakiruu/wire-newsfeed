@@ -10,7 +10,7 @@ const parser = new Parser()
 export class RSSProvider implements NewsProvider {
   name = 'RSS' as const
   poll_interval_ms = 300_000
-  rate_limit = { requests: 10, window_ms: 300_000 }
+  rate_limit = { requests: 60, window_ms: 300_000 }
 
   constructor(private feeds: string[] = DEFAULT_RSS_FEEDS) {}
 
