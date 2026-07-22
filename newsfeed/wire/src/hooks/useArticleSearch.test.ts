@@ -6,13 +6,12 @@ import type { Article } from '../providers/types'
 
 function makeArticle(overrides: Partial<Article> & { id: string }): Article {
   return {
-    id: overrides.id,
-    title: overrides.title ?? `Article ${overrides.id}`,
-    summary: overrides.summary ?? '',
+    title: `Article ${overrides.id}`,
+    summary: '',
     url: `https://example.com/${overrides.id}`,
     source: 'FMP',
     provider_label: 'FMP',
-    symbols: overrides.symbols ?? [],
+    symbols: [],
     published_at: new Date().toISOString(),
     ingested_at: new Date().toISOString(),
     ...overrides,

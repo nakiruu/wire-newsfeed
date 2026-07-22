@@ -2,6 +2,7 @@ import type { NewsProvider } from '../providers/types'
 import { exactDedup, fuzzyDedup } from '../providers/dedup'
 import { useFeedStore } from '../stores/feedStore'
 import { useConfigStore } from '../stores/configStore'
+import { loadCachedArticles } from '../lib/storage'
 import { FMPProvider } from '../providers/fmp.provider'
 import { AlpacaProvider } from '../providers/alpaca.provider'
 import { RSSProvider } from '../providers/rss.provider'
@@ -29,10 +30,24 @@ export class ProviderCoordinator {
     if (this._isRunning) return
     this._isRunning = true
 
-    // Seed knownIds from articles already in the feed
+    // Seed knownIds from articles already in the feed (synchronous path)
     const existingArticles = useFeedStore.getState().articles
     for (const a of existingArticles) this.knownIds.add(a.id)
 
+    // Seed feed from IndexedDB cache, then seed knownIds and kick off polling
+    void loadCachedArticles().then(cached => {
+      if (cached.length > 0) {
+        useFeedStore.getState().addArticles(cached, true)
+        for (const a of cached) this.knownIds.add(a.id)
+      }
+      this._startPolling()
+    }).catch(() => {
+      // IDB unavailable — proceed without cache
+      this._startPolling()
+    })
+  }
+
+  private _startPolling(): void {
     for (const provider of this.providers) {
       const entry: ProviderEntry = {
         provider,

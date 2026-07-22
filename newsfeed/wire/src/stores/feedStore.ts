@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import type { Article } from '../providers/types'
 import { exactDedup } from '../providers/dedup'
+import { saveReadIds, loadReadIds, saveBookmarkIds, loadBookmarkIds, cacheArticles } from '../lib/storage'
 
 interface FeedState {
   articles: Article[]
@@ -24,8 +25,8 @@ function sortDesc(articles: Article[]): Article[] {
 export const useFeedStore = create<FeedState>((set, get) => ({
   articles: [],
   pendingArticles: [],
-  readIds: new Set(),
-  bookmarkIds: new Set(),
+  readIds: loadReadIds(),
+  bookmarkIds: loadBookmarkIds(),
   focusedIndex: 0,
 
   addArticles(incoming, isAtTop) {
@@ -33,6 +34,7 @@ export const useFeedStore = create<FeedState>((set, get) => ({
     const knownIds = new Set([...articles.map(a => a.id), ...pendingArticles.map(a => a.id)])
     const netNew = exactDedup(incoming, knownIds)
     if (netNew.length === 0) return
+    void cacheArticles(netNew)
     if (isAtTop) {
       set(s => ({ articles: sortDesc([...netNew, ...s.articles]) }))
     } else {
@@ -48,7 +50,11 @@ export const useFeedStore = create<FeedState>((set, get) => ({
   },
 
   markRead(id) {
-    set(s => ({ readIds: new Set([...s.readIds, id]) }))
+    set(s => {
+      const next = new Set([...s.readIds, id])
+      saveReadIds(next)
+      return { readIds: next }
+    })
   },
 
   toggleBookmark(id) {
@@ -56,6 +62,7 @@ export const useFeedStore = create<FeedState>((set, get) => ({
       const next = new Set(s.bookmarkIds)
       if (next.has(id)) next.delete(id)
       else next.add(id)
+      saveBookmarkIds(next)
       return { bookmarkIds: next }
     })
   },

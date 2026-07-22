@@ -24,7 +24,6 @@ describe('useRelativeTime', () => {
     vi.useFakeTimers()
     const dateStr = new Date(Date.now() - 10_000).toISOString()
     const { result } = renderHook(() => useRelativeTime(dateStr))
-    const initial = result.current
     act(() => { vi.advanceTimersByTime(30_000) })
     // Still a string (may or may not change depending on time boundary)
     expect(typeof result.current).toBe('string')

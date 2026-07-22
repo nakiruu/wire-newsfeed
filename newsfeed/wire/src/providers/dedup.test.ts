@@ -24,7 +24,7 @@ describe('exactDedup', () => {
   })
 
   it('returns all articles when knownIds is empty', () => {
-    const incoming = [makeArticle(), makeArticle({ id: 'FMP:xyz' })]
+    const incoming = [makeArticle({}), makeArticle({ id: 'FMP:xyz' })]
     expect(exactDedup(incoming, new Set())).toHaveLength(2)
   })
 })

@@ -28,7 +28,7 @@ describe('buildProxiedUrl', () => {
 describe('proxyFetch', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    global.fetch = vi.fn()
+    globalThis.fetch = vi.fn()
   })
 
   it('reads corsProxyUrl from configStore at call time and constructs proxied URL', async () => {
@@ -36,10 +36,10 @@ describe('proxyFetch', () => {
       corsProxyUrl: 'http://proxy.test',
     } as any)
 
-    global.fetch = vi.fn().mockResolvedValue({ ok: true })
+    globalThis.fetch = vi.fn().mockResolvedValue({ ok: true })
 
     await proxyFetch('http://api.example.com/data')
 
-    expect(global.fetch).toHaveBeenCalledWith('http://proxy.test/http://api.example.com/data', undefined)
+    expect(globalThis.fetch).toHaveBeenCalledWith('http://proxy.test/http://api.example.com/data', undefined)
   })
 })

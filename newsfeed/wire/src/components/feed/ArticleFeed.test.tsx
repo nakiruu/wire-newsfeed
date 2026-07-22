@@ -7,7 +7,7 @@ import type { Article } from '../../providers/types'
 
 // Mock @tanstack/react-virtual so jsdom can render without layout
 vi.mock('@tanstack/react-virtual', () => ({
-  useVirtualizer: ({ count, getScrollElement }: { count: number; getScrollElement: () => Element | null }) => ({
+  useVirtualizer: ({ count }: { count: number; getScrollElement?: () => Element | null }) => ({
     getTotalSize: () => count * 96,
     getVirtualItems: () =>
       Array.from({ length: count }, (_, i) => ({
