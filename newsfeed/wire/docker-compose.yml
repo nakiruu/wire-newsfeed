@@ -1,11 +1,16 @@
 services:
   wire:
-    build: .
+    build:
+      context: .
+      args:
+        VITE_CORS_PROXY_URL: ${VITE_CORS_PROXY_URL}
+        VITE_FMP_API_KEY: ${VITE_FMP_API_KEY}
+        VITE_ALPACA_API_KEY: ${VITE_ALPACA_API_KEY}
     ports:
       - "7823:80"
     restart: unless-stopped
 
-  # Optional: bundled CORS proxy (use if you're not running cors-anywhere on Unraid)
+  # Optional: bundled CORS proxy (use if you're not running cors-anywhere externally)
   # Start with: docker compose --profile proxy up
   cors-proxy:
     build: ./cors-proxy

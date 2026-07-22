@@ -3,6 +3,11 @@ import type { ProviderSource } from '../lib/hash'
 import type { ProviderConfig } from '../providers/types'
 import { DEFAULT_POLL_INTERVALS } from '../lib/constants'
 
+// Build-time defaults from .env (VITE_ prefix makes them available in the browser bundle)
+const ENV_CORS_PROXY = (import.meta.env.VITE_CORS_PROXY_URL as string) || ''
+const ENV_FMP_KEY    = (import.meta.env.VITE_FMP_API_KEY    as string) || ''
+const ENV_ALPACA_KEY = (import.meta.env.VITE_ALPACA_API_KEY as string) || ''
+
 interface ConfigState {
   corsProxyUrl: string
   providers: Record<ProviderSource, ProviderConfig>
@@ -21,10 +26,13 @@ interface ConfigState {
 }
 
 function defaultProviders(): Record<ProviderSource, ProviderConfig> {
-  const sources: ProviderSource[] = ['FMP', 'ALPACA', 'RSS', 'SEC', 'WEBHOOK']
-  return Object.fromEntries(
-    sources.map(s => [s, { enabled: s !== 'WEBHOOK', poll_interval_ms: DEFAULT_POLL_INTERVALS[s], consecutiveFailures: 0 }])
-  ) as Record<ProviderSource, ProviderConfig>
+  return {
+    FMP:     { enabled: !!ENV_FMP_KEY,    api_key: ENV_FMP_KEY,    poll_interval_ms: DEFAULT_POLL_INTERVALS.FMP,     consecutiveFailures: 0 },
+    ALPACA:  { enabled: !!ENV_ALPACA_KEY, api_key: ENV_ALPACA_KEY, poll_interval_ms: DEFAULT_POLL_INTERVALS.ALPACA,  consecutiveFailures: 0 },
+    RSS:     { enabled: true,                                       poll_interval_ms: DEFAULT_POLL_INTERVALS.RSS,     consecutiveFailures: 0 },
+    SEC:     { enabled: true,                                       poll_interval_ms: DEFAULT_POLL_INTERVALS.SEC,     consecutiveFailures: 0 },
+    WEBHOOK: { enabled: false,                                      poll_interval_ms: DEFAULT_POLL_INTERVALS.WEBHOOK, consecutiveFailures: 0 },
+  }
 }
 
 const STORAGE_KEY = 'wire:config'
@@ -50,12 +58,23 @@ function loadFromStorage(): Partial<ConfigState> {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (!raw) return {}
     const parsed = JSON.parse(raw)
-    return { ...parsed, providers: { ...defaultProviders(), ...parsed.providers } }
+    const defaults = defaultProviders()
+    // Env vars fill in any gaps: if a stored key is empty, fall back to the env default
+    return {
+      ...parsed,
+      corsProxyUrl: parsed.corsProxyUrl || ENV_CORS_PROXY,
+      providers: {
+        ...defaults,
+        ...parsed.providers,
+        FMP:    { ...defaults.FMP,    ...parsed.providers?.FMP,    api_key: parsed.providers?.FMP?.api_key    || ENV_FMP_KEY },
+        ALPACA: { ...defaults.ALPACA, ...parsed.providers?.ALPACA, api_key: parsed.providers?.ALPACA?.api_key || ENV_ALPACA_KEY },
+      },
+    }
   } catch { return {} }
 }
 
 export const useConfigStore = create<ConfigState>((set, get) => ({
-  corsProxyUrl: '', providers: defaultProviders(), watchlistSymbols: [],
+  corsProxyUrl: ENV_CORS_PROXY, providers: defaultProviders(), watchlistSymbols: [],
   displayDensity: 'comfortable', autoRefresh: true,
   ...loadFromStorage(),
 
