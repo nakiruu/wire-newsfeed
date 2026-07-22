@@ -1,0 +1,66 @@
+import { create } from 'zustand'
+import type { Article } from '../providers/types'
+import { exactDedup } from '../providers/dedup'
+
+interface FeedState {
+  articles: Article[]
+  pendingArticles: Article[]
+  readIds: Set<string>
+  bookmarkIds: Set<string>
+  focusedIndex: number
+  addArticles(incoming: Article[], isAtTop: boolean): void
+  flushPending(): void
+  markRead(id: string): void
+  toggleBookmark(id: string): void
+  setFocusedIndex(index: number): void
+}
+
+function sortDesc(articles: Article[]): Article[] {
+  return [...articles].sort(
+    (a, b) => new Date(b.published_at).getTime() - new Date(a.published_at).getTime()
+  )
+}
+
+export const useFeedStore = create<FeedState>((set, get) => ({
+  articles: [],
+  pendingArticles: [],
+  readIds: new Set(),
+  bookmarkIds: new Set(),
+  focusedIndex: 0,
+
+  addArticles(incoming, isAtTop) {
+    const { articles, pendingArticles } = get()
+    const knownIds = new Set([...articles.map(a => a.id), ...pendingArticles.map(a => a.id)])
+    const netNew = exactDedup(incoming, knownIds)
+    if (netNew.length === 0) return
+    if (isAtTop) {
+      set(s => ({ articles: sortDesc([...netNew, ...s.articles]) }))
+    } else {
+      set(s => ({ pendingArticles: [...netNew, ...s.pendingArticles] }))
+    }
+  },
+
+  flushPending() {
+    set(s => ({
+      articles: sortDesc([...s.pendingArticles, ...s.articles]),
+      pendingArticles: [],
+    }))
+  },
+
+  markRead(id) {
+    set(s => ({ readIds: new Set([...s.readIds, id]) }))
+  },
+
+  toggleBookmark(id) {
+    set(s => {
+      const next = new Set(s.bookmarkIds)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return { bookmarkIds: next }
+    })
+  },
+
+  setFocusedIndex(index) {
+    set({ focusedIndex: index })
+  },
+}))
