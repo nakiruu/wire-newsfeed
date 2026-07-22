@@ -78,7 +78,7 @@ interface NewsProvider {
 | Alpaca | `/v1beta1/news` | 30s | Includes sentiment field |
 | RSS | Generic parser, 5 hardcoded feeds | 300s | Reuters, CNBC, MarketWatch, WSJ, SeekingAlpha |
 | SEC EDGAR | EDGAR RSS `?action=getcurrent` | 600s | 8-K, 10-Q, 10-K only |
-| Webhook | Passive local endpoint | — | n8n / custom push |
+| Webhook | Deferred to Phase 4 | — | Requires backend to receive HTTP POST |
 
 ### Article Schema
 
@@ -287,7 +287,7 @@ newsfeed/wire/
 │   │   ├── alpaca.provider.ts
 │   │   ├── rss.provider.ts
 │   │   ├── sec.provider.ts
-│   │   └── webhook.provider.ts
+│   │   └── webhook.provider.ts       # stub only — implemented in Phase 4
 │   ├── stores/
 │   │   ├── feedStore.ts
 │   │   ├── filterStore.ts
