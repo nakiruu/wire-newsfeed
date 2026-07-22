@@ -29,6 +29,7 @@ describe('FMPProvider', () => {
     expect(articles[0].source).toBe('FMP')
     expect(articles[0].summary).toBe('Apple Inc reported record quarterly earnings.')
     expect(articles[0].symbols).toContain('AAPL')
+    expect(proxyFetch).toHaveBeenCalledTimes(3)
   })
 
   it('returns empty array on API error', async () => {

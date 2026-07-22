@@ -8,7 +8,7 @@ const BASE = 'https://financialmodelingprep.com/api/v3'
 export class FMPProvider implements NewsProvider {
   name = 'FMP' as const
   poll_interval_ms = 60_000
-  rate_limit = { requests: 10, window_ms: 60_000 }
+  rate_limit = { requests: 300, window_ms: 60_000 }
 
   constructor(private apiKey: string) {}
 
@@ -18,6 +18,7 @@ export class FMPProvider implements NewsProvider {
     const endpoints = [
       `${BASE}/stock_news?limit=${params.limit ?? 50}&apikey=${this.apiKey}`,
       `${BASE}/general_news?limit=20&apikey=${this.apiKey}`,
+      `${BASE}/press-releases?limit=20&apikey=${this.apiKey}`,
     ]
     for (const url of endpoints) {
       try {
