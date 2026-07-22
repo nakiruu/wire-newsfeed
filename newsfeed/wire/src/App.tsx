@@ -1,16 +1,19 @@
 import { useState } from 'react'
 import { Shell } from './components/layout/Shell'
+import { ArticleFeed } from './components/feed/ArticleFeed'
+import { useFeedStore } from './stores/feedStore'
 
 export default function App() {
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const focusedIndex = useFeedStore(s => s.focusedIndex)
 
   return (
     <Shell onSearchOpen={() => {}} onSettingsOpen={() => setSettingsOpen(true)}>
       <main className="flex-1 min-w-0 border-r border-[#1F1F1F]">
-        <p className="p-6 font-mono text-[0.8125rem] text-[#555555]">Feed coming in Task 12</p>
+        <ArticleFeed focusedIndex={focusedIndex} onConfigureClick={() => setSettingsOpen(true)} />
       </main>
       <aside className="w-[280px] shrink-0 hidden lg:block">
-        <p className="p-6 font-mono text-[0.8125rem] text-[#555555]">Sidebar coming in Task 13</p>
+        <p className="p-6 font-mono text-[0.8125rem] text-[#555555]">Sidebar coming soon</p>
       </aside>
     </Shell>
   )
