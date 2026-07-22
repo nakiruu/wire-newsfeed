@@ -8,10 +8,7 @@ services:
   # Optional: bundled CORS proxy (use if you're not running cors-anywhere on Unraid)
   # Start with: docker compose --profile proxy up
   cors-proxy:
-    image: node:22-alpine
-    command: >
-      sh -c "npm install -g cors-anywhere@0.4.4 2>/dev/null &&
-             node -e \"require('cors-anywhere').createServer({originWhitelist:[]}).listen(7824,'0.0.0.0')\""
+    build: ./cors-proxy
     ports:
       - "7824:7824"
     restart: unless-stopped
