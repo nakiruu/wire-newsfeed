@@ -42,7 +42,7 @@ export class SECProvider implements NewsProvider {
             symbols: extractSymbols(item.title ?? ''),
             published_at: item.pubDate ? new Date(item.pubDate).toISOString() : now,
             ingested_at: now,
-            category: 'SEC Filings',
+            category: 'sec-filing',
           })
         }
       } catch { /* individual feed failure — continue */ }

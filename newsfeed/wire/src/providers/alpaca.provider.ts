@@ -1,7 +1,6 @@
 import type { Article, NewsProvider, FetchParams } from './types'
 import { articleId } from '../lib/hash'
 import { toSentiment } from './normalize'
-import { proxyFetch } from '../lib/api'
 
 const BASE = 'https://data.alpaca.markets/v1beta1'
 
@@ -18,7 +17,7 @@ export class AlpacaProvider implements NewsProvider {
     if (params.symbols?.length) qp.set('symbols', params.symbols.join(','))
     if (params.since) qp.set('start', params.since)
     try {
-      const res = await proxyFetch(`${BASE}/news?${qp}`, {
+      const res = await fetch(`${BASE}/news?${qp}`, {
         headers: { 'APCA-API-KEY-ID': this.apiKey, 'APCA-API-SECRET-KEY': this.secretKey },
       })
       if (!res.ok) return []

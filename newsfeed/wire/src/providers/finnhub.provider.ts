@@ -1,7 +1,6 @@
 import type { Article, NewsProvider, FetchParams } from './types'
 import { articleId } from '../lib/hash'
 import { stripHtml, extractSymbols } from './normalize'
-import { proxyFetch } from '../lib/api'
 
 const BASE = 'https://finnhub.io/api/v1'
 
@@ -25,7 +24,7 @@ export class FinnhubProvider implements NewsProvider {
 
     for (const category of categories) {
       try {
-        const res = await proxyFetch(`${BASE}/news?category=${category}&token=${this.apiKey}`)
+        const res = await fetch(`${BASE}/news?category=${category}&token=${this.apiKey}`)
         if (!res.ok) continue
         const data = await res.json() as unknown[]
         if (!Array.isArray(data)) continue
