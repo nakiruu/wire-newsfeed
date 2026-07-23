@@ -5,10 +5,12 @@ import { useConfigStore } from '../stores/configStore'
 const GEMINI_URL =
   'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent'
 
-const BATCH_SIZE = 5      // articles per Gemini call
-const FLUSH_MS = 4_000    // 4 s → stays under 15 RPM free tier
+// One call per flush, one flush per interval — guaranteed ≤ 15 RPM on the free tier
+const BATCH_SIZE = 5
+const FLUSH_MS = 4_500
 
-interface GeminiResult {
+interface ArticleResult {
+  index: number
   overallSentiment: 'bullish' | 'bearish' | 'neutral'
   sentimentScore: number
   keyFactors: string[]
@@ -23,26 +25,44 @@ interface QueueEntry {
   symbol?: string
 }
 
-function buildSentimentPrompt(articles: QueueEntry[], symbol?: string): string {
+function buildSentimentPrompt(articles: QueueEntry[]): string {
   const newsText = articles
-    .map((a, i) => `Article ${i + 1}:\n${a.title}\n${a.summary}`)
+    .map((a, i) =>
+      `Article ${i + 1}${a.symbol ? ` [${a.symbol}]` : ''}:\n${a.title}\n${a.summary}`
+    )
     .join('\n\n')
-  const context = symbol ? `about ${symbol}` : 'about the financial markets'
-  return `You are a financial sentiment analyst. Analyze the following news articles ${context} and return a JSON response with:
 
-1. "overallSentiment": "bullish", "bearish", or "neutral"
-2. "sentimentScore": a number from -1 (very bearish) to +1 (very bullish)
-3. "keyFactors": array of the 3 most important factors driving the sentiment
-4. "confidence": number from 0 to 1 indicating your confidence
-5. "summary": one-sentence summary of the sentiment
+  return `You are a financial sentiment analyst. Analyze the following ${articles.length} news article(s) and return a JSON array with one object per article in this exact format:
+
+[
+  {
+    "index": 1,
+    "overallSentiment": "bullish",
+    "sentimentScore": 0.72,
+    "keyFactors": ["factor 1", "factor 2", "factor 3"],
+    "confidence": 0.85,
+    "summary": "One-sentence summary of the sentiment."
+  }
+]
+
+Fields:
+- "index": matches the Article number above (1-based)
+- "overallSentiment": exactly "bullish", "bearish", or "neutral"
+- "sentimentScore": number from -1 (very bearish) to +1 (very bullish)
+- "keyFactors": array of up to 3 key factors driving the sentiment
+- "confidence": number from 0 to 1 indicating your confidence
+- "summary": one sentence describing the sentiment
 
 News articles:
 ${newsText}
 
-Return ONLY valid JSON, no other text.`
+Return ONLY a valid JSON array, no other text.`
 }
 
-async function callGemini(prompt: string, apiKey: string): Promise<GeminiResult | null> {
+async function callGemini(
+  prompt: string,
+  apiKey: string,
+): Promise<{ results: ArticleResult[]; rateLimited: boolean }> {
   try {
     const res = await fetch(`${GEMINI_URL}?key=${apiKey}`, {
       method: 'POST',
@@ -52,21 +72,27 @@ async function callGemini(prompt: string, apiKey: string): Promise<GeminiResult 
         generationConfig: { response_mime_type: 'application/json' },
       }),
     })
-    if (!res.ok) return null
+
+    if (res.status === 429) return { results: [], rateLimited: true }
+    if (!res.ok) return { results: [], rateLimited: false }
+
     const data = await res.json() as {
       candidates?: Array<{ content: { parts: Array<{ text: string }> } }>
     }
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text
-    if (!text) return null
-    return JSON.parse(text) as GeminiResult
+    if (!text) return { results: [], rateLimited: false }
+
+    const parsed = JSON.parse(text) as ArticleResult[]
+    return { results: Array.isArray(parsed) ? parsed : [], rateLimited: false }
   } catch {
-    return null
+    return { results: [], rateLimited: false }
   }
 }
 
 class SentimentAnalyzer {
   private queue: QueueEntry[] = []
   private timer: ReturnType<typeof setInterval> | null = null
+  private blockedUntil = 0
 
   start(): void {
     if (this.timer) return
@@ -90,39 +116,40 @@ class SentimentAnalyzer {
     const { geminiApiKey } = useConfigStore.getState()
     if (!geminiApiKey || this.queue.length === 0) return
 
-    const batch = this.queue.splice(0, BATCH_SIZE * 4)
+    // Respect 429 backoff
+    if (Date.now() < this.blockedUntil) return
 
-    // Group by primary symbol so each prompt is contextually coherent
-    const bySymbol = new Map<string, QueueEntry[]>()
-    for (const entry of batch) {
-      const key = entry.symbol ?? '__general__'
-      const group = bySymbol.get(key) ?? []
-      group.push(entry)
-      bySymbol.set(key, group)
+    // One Gemini call per flush — guaranteed ≤ 15 RPM
+    const batch = this.queue.splice(0, BATCH_SIZE)
+    const { results, rateLimited } = await callGemini(
+      buildSentimentPrompt(batch),
+      geminiApiKey,
+    )
+
+    if (rateLimited) {
+      // Put articles back and wait 60 s before retrying
+      this.queue.unshift(...batch)
+      this.blockedUntil = Date.now() + 60_000
+      return
     }
 
-    for (const [symbol, entries] of bySymbol) {
-      const sym = symbol === '__general__' ? undefined : symbol
-      const prompt = buildSentimentPrompt(entries.slice(0, BATCH_SIZE), sym)
-      const result = await callGemini(prompt, geminiApiKey)
-      if (!result) continue
-
+    const { updateArticleSentiment } = useFeedStore.getState()
+    for (const r of results) {
+      const entry = batch[r.index - 1]
+      if (!entry) continue
       const sentiment =
-        result.overallSentiment === 'bullish' ||
-        result.overallSentiment === 'bearish' ||
-        result.overallSentiment === 'neutral'
-          ? result.overallSentiment
+        r.overallSentiment === 'bullish' ||
+        r.overallSentiment === 'bearish' ||
+        r.overallSentiment === 'neutral'
+          ? r.overallSentiment
           : undefined
-
-      for (const entry of entries) {
-        useFeedStore.getState().updateArticleSentiment(entry.id, {
-          sentiment,
-          sentiment_score: result.sentimentScore,
-          sentiment_summary: result.summary,
-          sentiment_confidence: result.confidence,
-          sentiment_key_factors: result.keyFactors,
-        })
-      }
+      updateArticleSentiment(entry.id, {
+        sentiment,
+        sentiment_score: r.sentimentScore,
+        sentiment_summary: r.summary,
+        sentiment_confidence: r.confidence,
+        sentiment_key_factors: r.keyFactors,
+      })
     }
   }
 }

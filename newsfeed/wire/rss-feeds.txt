@@ -2,9 +2,6 @@
 # One URL per line. Lines starting with # are ignored.
 # Rebuild the Docker image after making changes.
 
-# News wires
-https://feeds.reuters.com/reuters/businessNews
-
 # Wall Street Journal
 https://feeds.a.dj.com/rss/RSSMarketsMain.xml
 
@@ -17,11 +14,16 @@ https://www.cnbc.com/id/100003114/device/rss/rss.html
 # Seeking Alpha
 https://seekingalpha.com/feed.xml
 
-# The Motley Fool
-https://www.fool.com/a/feeds/foolwatch?format=rss2&id=foolwatch&apikey=foolwatch
+# Benzinga (free, no auth required)
+https://www.benzinga.com/feed
 
-# Barron's
-https://www.barrons.com/xml/rss/3_7551.xml
+# Investopedia
+https://www.investopedia.com/feedbuilder/feed/getfeed/?feedName=rss_headline
 
-# Bloomberg Markets (unofficial mirror — replace with your own if needed)
-# https://example.com/bloomberg-markets-rss
+# PR Newswire — financial press releases
+https://www.prnewswire.com/rss/financial-services-latest-news.rss
+
+# Removed (broken):
+# Reuters businessNews — 404, feed retired
+# Barron's — 403, paywalled
+# Motley Fool — 401, requires auth
