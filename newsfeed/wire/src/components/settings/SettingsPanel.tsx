@@ -66,6 +66,7 @@ function ApiKeyField({ source, placeholder, hint, validate }: {
 export function SettingsPanel({ open, onClose }: { open: boolean; onClose(): void }) {
   const {
     corsProxyUrl, setCorsProxyUrl,
+    articleExtractorUrl, setArticleExtractorUrl,
     providers, setProviderConfig,
     watchlistSymbols, addWatchlistSymbol, removeWatchlistSymbol,
     displayDensity, setDisplayDensity,
@@ -74,11 +75,13 @@ export function SettingsPanel({ open, onClose }: { open: boolean; onClose(): voi
 
   const [proxyInput, setProxyInput] = useState(corsProxyUrl)
   const [proxyTestStatus, setProxyTestStatus] = useState<ValidationStatus>('idle')
+  const [extractorInput, setExtractorInput] = useState(articleExtractorUrl)
+  const [extractorTestStatus, setExtractorTestStatus] = useState<ValidationStatus>('idle')
   const [rssFeedInput, setRssFeedInput] = useState((providers.RSS.custom_feeds ?? []).join('\n'))
   const [newSymbol, setNewSymbol] = useState('')
 
-  // Sync proxyInput when store changes externally
   useEffect(() => { setProxyInput(corsProxyUrl) }, [corsProxyUrl])
+  useEffect(() => { setExtractorInput(articleExtractorUrl) }, [articleExtractorUrl])
 
   // Escape key closes the panel
   useEffect(() => {
@@ -98,6 +101,16 @@ export function SettingsPanel({ open, onClose }: { open: boolean; onClose(): voi
       setProxyTestStatus(res.ok ? 'ok' : 'error')
     } catch {
       setProxyTestStatus('error')
+    }
+  }
+
+  async function testExtractor() {
+    setExtractorTestStatus('testing')
+    try {
+      const res = await fetch(articleExtractorUrl.replace(/\/$/, '') + '/health')
+      setExtractorTestStatus(res.ok ? 'ok' : 'error')
+    } catch {
+      setExtractorTestStatus('error')
     }
   }
 
@@ -168,6 +181,36 @@ export function SettingsPanel({ open, onClose }: { open: boolean; onClose(): voi
             </div>
             <p className="mt-1.5 text-[0.75rem] text-[#555555]">
               Self-hosted cors-anywhere on your Unraid instance.
+            </p>
+          </section>
+
+          {/* Article Extractor */}
+          <section aria-labelledby="section-extractor">
+            <h3 id="section-extractor" className="text-[0.75rem] font-mono text-[#555555] uppercase tracking-[0.08em] mb-3">
+              Article Extractor
+            </h3>
+            <div className="flex gap-2">
+              <Input
+                value={extractorInput}
+                onChange={e => { setExtractorInput(e.target.value); setExtractorTestStatus('idle') }}
+                placeholder="http://192.168.1.x:7825"
+                aria-label="Article extractor URL"
+              />
+              <Button variant="primary" onClick={() => { setArticleExtractorUrl(extractorInput); setExtractorTestStatus('idle') }}>
+                Save
+              </Button>
+              <Button
+                variant="ghost"
+                onClick={testExtractor}
+                disabled={!articleExtractorUrl || extractorTestStatus === 'testing'}
+                aria-label="Test article extractor"
+              >
+                Test
+              </Button>
+              <StatusBadge status={extractorTestStatus} />
+            </div>
+            <p className="mt-1.5 text-[0.75rem] text-[#555555]">
+              Self-hosted Trafilatura service (port 7825). Enables Reader mode on articles.
             </p>
           </section>
 

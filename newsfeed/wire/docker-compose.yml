@@ -6,9 +6,19 @@ services:
         VITE_CORS_PROXY_URL: ${VITE_CORS_PROXY_URL}
         VITE_FMP_API_KEY: ${VITE_FMP_API_KEY}
         VITE_ALPACA_API_KEY: ${VITE_ALPACA_API_KEY}
+        VITE_ARTICLE_EXTRACTOR_URL: ${VITE_ARTICLE_EXTRACTOR_URL:-}
     ports:
       - "7823:80"
     restart: unless-stopped
+
+  # Article extraction service — Trafilatura-powered, with optional Browserless fallback
+  article-extractor:
+    build: ./article-extractor
+    ports:
+      - "7825:7825"
+    restart: unless-stopped
+    environment:
+      BROWSERLESS_URL: ${BROWSERLESS_URL:-}
 
   # Optional: bundled CORS proxy (use if you're not running cors-anywhere externally)
   # Start with: docker compose --profile proxy up
@@ -19,3 +29,17 @@ services:
     restart: unless-stopped
     profiles:
       - proxy
+
+  # Optional: headless Chrome for JS-heavy article extraction (CNBC, Reuters, etc.)
+  # Start with: docker compose --profile reader up  (requires ~2-4 GB RAM)
+  browserless:
+    image: browserless/chrome:latest
+    ports:
+      - "7826:3000"
+    restart: unless-stopped
+    environment:
+      - MAX_CONCURRENT_SESSIONS=3
+      - PREBOOT_CHROME=true
+      - DEFAULT_LAUNCH_ARGS=["--no-sandbox","--disable-setuid-sandbox"]
+    profiles:
+      - reader

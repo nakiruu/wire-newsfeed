@@ -1,3 +1,4 @@
+import { BookOpen } from 'lucide-react'
 import { useFeedStore } from '../../stores/feedStore'
 import { Badge } from '../ui/Badge'
 import { Tooltip } from '../ui/Tooltip'
@@ -10,7 +11,11 @@ const SENTIMENT_COLORS = {
   neutral: 'bg-[#555555]',
 } as const
 
-export function ArticleCard({ article, focused }: { article: Article; focused?: boolean }) {
+export function ArticleCard({ article, focused, onReaderOpen }: {
+  article: Article
+  focused?: boolean
+  onReaderOpen?(): void
+}) {
   const { readIds, bookmarkIds, markRead, toggleBookmark } = useFeedStore()
   const isRead = readIds.has(article.id)
   const isBookmarked = bookmarkIds.has(article.id)
@@ -19,6 +24,12 @@ export function ArticleCard({ article, focused }: { article: Article; focused?: 
   function open() {
     markRead(article.id)
     window.open(article.url, '_blank', 'noopener,noreferrer')
+  }
+
+  function handleReaderOpen(e: React.MouseEvent) {
+    e.stopPropagation()
+    markRead(article.id)
+    onReaderOpen?.()
   }
 
   function handleBookmark(e: React.MouseEvent) {
@@ -98,10 +109,20 @@ export function ArticleCard({ article, focused }: { article: Article; focused?: 
         )}
       </div>
 
+      {/* Action buttons */}
+      <div className="flex flex-col items-center gap-1 self-start mt-0.5 shrink-0">
+        <button
+          className="p-1 rounded text-[#333333] hover:text-[#888888] transition-colors duration-[150ms]"
+          onClick={handleReaderOpen}
+          aria-label="Open in reader"
+          tabIndex={0}
+        >
+          <BookOpen size={14} aria-hidden="true" />
+        </button>
       {/* Bookmark star icon */}
       <button
         className={[
-          'self-start mt-0.5 p-1 rounded transition-colors duration-[150ms] shrink-0',
+          'p-1 rounded transition-colors duration-[150ms]',
           isBookmarked
             ? 'text-[#0070F3]'
             : 'text-[#333333] hover:text-[#888888]',
@@ -124,6 +145,7 @@ export function ArticleCard({ article, focused }: { article: Article; focused?: 
           <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
         </svg>
       </button>
+      </div>
     </article>
   )
 }

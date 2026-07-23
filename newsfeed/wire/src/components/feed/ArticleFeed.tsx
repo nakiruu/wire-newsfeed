@@ -11,9 +11,10 @@ import { EmptyState } from './EmptyState'
 interface ArticleFeedProps {
   focusedIndex: number
   onConfigureClick(): void
+  onReaderOpen?(article: import('../../providers/types').Article): void
 }
 
-export function ArticleFeed({ focusedIndex, onConfigureClick }: ArticleFeedProps) {
+export function ArticleFeed({ focusedIndex, onConfigureClick, onReaderOpen }: ArticleFeedProps) {
   const parentRef = useRef<HTMLDivElement>(null)
 
   // Subscribe to individual filter/feed fields so selectors return stable primitives,
@@ -84,6 +85,7 @@ export function ArticleFeed({ focusedIndex, onConfigureClick }: ArticleFeedProps
                 <ArticleCard
                   article={articles[item.index]}
                   focused={item.index === focusedIndex}
+                  onReaderOpen={onReaderOpen ? () => onReaderOpen(articles[item.index]) : undefined}
                 />
               </div>
             ))}
