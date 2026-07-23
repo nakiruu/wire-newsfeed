@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from '@testing-library/react'
+﻿import { render, screen, fireEvent } from '@testing-library/react'
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { Sidebar, buildSparklineData } from './Sidebar'
 import { useConfigStore } from '../../stores/configStore'
@@ -13,7 +13,7 @@ import type { ProviderSource } from '../../lib/hash'
 
 function makeProviders(overrides: Partial<Record<ProviderSource, Partial<ProviderConfig>>> = {}): Record<ProviderSource, ProviderConfig> {
   const base: ProviderConfig = { enabled: true, poll_interval_ms: 60_000, consecutiveFailures: 0 }
-  const sources: ProviderSource[] = ['FMP', 'ALPACA', 'RSS', 'SEC', 'WEBHOOK']
+  const sources: ProviderSource[] = ['FINNHUB', 'ALPACA', 'RSS', 'SEC', 'WEBHOOK']
   return Object.fromEntries(
     sources.map(s => [s, { ...base, enabled: s !== 'WEBHOOK', ...overrides[s] }])
   ) as Record<ProviderSource, ProviderConfig>
@@ -29,7 +29,7 @@ beforeEach(() => {
   })
   useFilterStore.setState({
     activeCategory: null,
-    activeSources: new Set<ProviderSource>(['FMP', 'ALPACA', 'RSS', 'SEC']),
+    activeSources: new Set<ProviderSource>(['FINNHUB', 'ALPACA', 'RSS', 'SEC']),
     searchQuery: '',
   })
   useFeedStore.setState({
@@ -86,7 +86,7 @@ describe('Sidebar', () => {
 
   it('renders all four non-WEBHOOK source labels', () => {
     render(<Sidebar onSettingsOpen={() => {}} />)
-    expect(screen.getByText('FMP')).toBeInTheDocument()
+    expect(screen.getByText('FINNHUB')).toBeInTheDocument()
     expect(screen.getByText('Alpaca')).toBeInTheDocument()
     expect(screen.getByText('RSS')).toBeInTheDocument()
     expect(screen.getByText('SEC EDGAR')).toBeInTheDocument()
@@ -99,13 +99,13 @@ describe('Sidebar', () => {
 
   it('renders Configure button', () => {
     render(<Sidebar onSettingsOpen={() => {}} />)
-    expect(screen.getByText('Configure →')).toBeInTheDocument()
+    expect(screen.getByText('Configure â†’')).toBeInTheDocument()
   })
 
-  it('clicking Configure → calls onSettingsOpen', () => {
+  it('clicking Configure â†’ calls onSettingsOpen', () => {
     const handler = vi.fn()
     render(<Sidebar onSettingsOpen={handler} />)
-    fireEvent.click(screen.getByText('Configure →'))
+    fireEvent.click(screen.getByText('Configure â†’'))
     expect(handler).toHaveBeenCalledTimes(1)
   })
 
@@ -137,12 +137,12 @@ describe('Sidebar', () => {
     useFeedStore.setState({
       articles: [
         {
-          id: 'FMP:abc',
+          id: 'FINNHUB:abc',
           title: 'Test',
           summary: '',
           url: 'https://example.com',
-          source: 'FMP',
-          provider_label: 'FMP',
+          source: 'FINNHUB',
+          provider_label: 'FINNHUB',
           symbols: [],
           published_at: new Date().toISOString(),
           ingested_at: new Date().toISOString(),
@@ -164,11 +164,11 @@ describe('Sidebar', () => {
 // ---------------------------------------------------------------------------
 
 describe('Sidebar source toggles', () => {
-  it('toggle for FMP calls toggleSource("FMP")', () => {
+  it('toggle for FINNHUB calls toggleSource("FINNHUB")', () => {
     const toggleSource = vi.fn()
     useFilterStore.setState({
       activeCategory: null,
-      activeSources: new Set<ProviderSource>(['FMP', 'ALPACA', 'RSS', 'SEC']),
+      activeSources: new Set<ProviderSource>(['FINNHUB', 'ALPACA', 'RSS', 'SEC']),
       searchQuery: '',
       toggleSource,
       setCategory: () => {},
@@ -176,17 +176,17 @@ describe('Sidebar source toggles', () => {
       getFilteredArticles: () => [],
     })
     render(<Sidebar onSettingsOpen={() => {}} />)
-    // FMP toggle is the first role="switch"
+    // FINNHUB toggle is the first role="switch"
     const switches = screen.getAllByRole('switch')
     fireEvent.click(switches[0])
-    expect(toggleSource).toHaveBeenCalledWith('FMP')
+    expect(toggleSource).toHaveBeenCalledWith('FINNHUB')
   })
 
   it('toggle for ALPACA calls toggleSource("ALPACA")', () => {
     const toggleSource = vi.fn()
     useFilterStore.setState({
       activeCategory: null,
-      activeSources: new Set<ProviderSource>(['FMP', 'ALPACA', 'RSS', 'SEC']),
+      activeSources: new Set<ProviderSource>(['FINNHUB', 'ALPACA', 'RSS', 'SEC']),
       searchQuery: '',
       toggleSource,
       setCategory: () => {},
@@ -207,37 +207,37 @@ describe('Sidebar source toggles', () => {
 describe('Sidebar error badges', () => {
   it('shows error badge when consecutiveFailures >= 2', () => {
     useConfigStore.setState({
-      providers: makeProviders({ FMP: { consecutiveFailures: 2, lastError: 'timeout' } }),
+      providers: makeProviders({ FINNHUB: { consecutiveFailures: 2, lastError: 'timeout' } }),
       watchlistSymbols: [],
       corsProxyUrl: '',
       displayDensity: 'comfortable',
       autoRefresh: true,
     })
     render(<Sidebar onSettingsOpen={() => {}} />)
-    expect(screen.getByLabelText('FMP error')).toBeInTheDocument()
+    expect(screen.getByLabelText('FINNHUB error')).toBeInTheDocument()
   })
 
   it('does not show error badge when consecutiveFailures is 1', () => {
     useConfigStore.setState({
-      providers: makeProviders({ FMP: { consecutiveFailures: 1 } }),
+      providers: makeProviders({ FINNHUB: { consecutiveFailures: 1 } }),
       watchlistSymbols: [],
       corsProxyUrl: '',
       displayDensity: 'comfortable',
       autoRefresh: true,
     })
     render(<Sidebar onSettingsOpen={() => {}} />)
-    expect(screen.queryByLabelText('FMP error')).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('FINNHUB error')).not.toBeInTheDocument()
   })
 
   it('does not show error badge when consecutiveFailures is 0', () => {
     render(<Sidebar onSettingsOpen={() => {}} />)
-    expect(screen.queryByLabelText('FMP error')).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('FINNHUB error')).not.toBeInTheDocument()
   })
 
   it('shows error badges for multiple failing sources independently', () => {
     useConfigStore.setState({
       providers: makeProviders({
-        FMP: { consecutiveFailures: 3 },
+        FINNHUB: { consecutiveFailures: 3 },
         RSS: { consecutiveFailures: 2 },
       }),
       watchlistSymbols: [],
@@ -246,7 +246,7 @@ describe('Sidebar error badges', () => {
       autoRefresh: true,
     })
     render(<Sidebar onSettingsOpen={() => {}} />)
-    expect(screen.getByLabelText('FMP error')).toBeInTheDocument()
+    expect(screen.getByLabelText('FINNHUB error')).toBeInTheDocument()
     expect(screen.getByLabelText('RSS error')).toBeInTheDocument()
     expect(screen.queryByLabelText('Alpaca error')).not.toBeInTheDocument()
   })

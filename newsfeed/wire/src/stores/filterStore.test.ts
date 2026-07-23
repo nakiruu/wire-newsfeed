@@ -1,17 +1,17 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+﻿import { describe, it, expect, beforeEach } from 'vitest'
 import { useFilterStore } from './filterStore'
 import { useFeedStore } from './feedStore'
 import type { Article } from '../providers/types'
 
 const makeArticle = (overrides: Partial<Article>): Article => ({
   id: 'FMP:1', title: 'Test', summary: '', url: 'https://example.com',
-  source: 'FMP', provider_label: 'FMP', symbols: [],
+  source: 'FINNHUB', provider_label: 'FINNHUB', symbols: [],
   published_at: new Date().toISOString(), ingested_at: new Date().toISOString(),
   ...overrides,
 })
 
 beforeEach(() => {
-  useFilterStore.setState({ activeCategory: null, activeSources: new Set(['FMP', 'ALPACA', 'RSS', 'SEC']), searchQuery: '' })
+  useFilterStore.setState({ activeCategory: null, activeSources: new Set(['FINNHUB', 'ALPACA', 'RSS', 'SEC']), searchQuery: '' })
   useFeedStore.setState({ articles: [], pendingArticles: [], readIds: new Set(), bookmarkIds: new Set(), focusedIndex: 0 })
 })
 
@@ -30,8 +30,8 @@ describe('getFilteredArticles', () => {
   })
 
   it('filters by active sources', () => {
-    useFeedStore.setState({ articles: [makeArticle({ id: 'a', source: 'FMP' }), makeArticle({ id: 'b', source: 'ALPACA' })] })
-    useFilterStore.setState({ activeSources: new Set(['FMP']) })
+    useFeedStore.setState({ articles: [makeArticle({ id: 'a', source: 'FINNHUB' }), makeArticle({ id: 'b', source: 'ALPACA' })] })
+    useFilterStore.setState({ activeSources: new Set(['FINNHUB']) })
     expect(useFilterStore.getState().getFilteredArticles()).toHaveLength(1)
   })
 })

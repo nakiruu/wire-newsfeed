@@ -67,6 +67,7 @@ export function SettingsPanel({ open, onClose }: { open: boolean; onClose(): voi
   const {
     corsProxyUrl, setCorsProxyUrl,
     articleExtractorUrl, setArticleExtractorUrl,
+    geminiApiKey, setGeminiApiKey,
     providers, setProviderConfig,
     watchlistSymbols, addWatchlistSymbol, removeWatchlistSymbol,
     displayDensity, setDisplayDensity,
@@ -77,11 +78,14 @@ export function SettingsPanel({ open, onClose }: { open: boolean; onClose(): voi
   const [proxyTestStatus, setProxyTestStatus] = useState<ValidationStatus>('idle')
   const [extractorInput, setExtractorInput] = useState(articleExtractorUrl)
   const [extractorTestStatus, setExtractorTestStatus] = useState<ValidationStatus>('idle')
+  const [geminiInput, setGeminiInput] = useState(geminiApiKey)
+  const [geminiTestStatus, setGeminiTestStatus] = useState<ValidationStatus>('idle')
   const [rssFeedInput, setRssFeedInput] = useState((providers.RSS.custom_feeds ?? []).join('\n'))
   const [newSymbol, setNewSymbol] = useState('')
 
   useEffect(() => { setProxyInput(corsProxyUrl) }, [corsProxyUrl])
   useEffect(() => { setExtractorInput(articleExtractorUrl) }, [articleExtractorUrl])
+  useEffect(() => { setGeminiInput(geminiApiKey) }, [geminiApiKey])
 
   // Escape key closes the panel
   useEffect(() => {
@@ -114,9 +118,28 @@ export function SettingsPanel({ open, onClose }: { open: boolean; onClose(): voi
     }
   }
 
-  async function validateFmp(key: string) {
-    const res = await proxyFetch(`https://financialmodelingprep.com/api/v3/stock_news?limit=1&apikey=${key}`)
+  async function validateFinnhub(key: string) {
+    const res = await proxyFetch(`https://finnhub.io/api/v1/news?category=general&token=${key}`)
     return res.ok
+  }
+
+  async function validateGemini(key: string) {
+    setGeminiTestStatus('testing')
+    try {
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ contents: [{ parts: [{ text: 'test' }] }] }),
+        }
+      )
+      const ok = res.ok
+      setGeminiTestStatus(ok ? 'ok' : 'error')
+      if (ok) setGeminiApiKey(key)
+    } catch {
+      setGeminiTestStatus('error')
+    }
   }
 
   async function validateAlpaca(key: string) {
@@ -214,32 +237,60 @@ export function SettingsPanel({ open, onClose }: { open: boolean; onClose(): voi
             </p>
           </section>
 
-          {/* FMP */}
-          <section aria-labelledby="section-fmp">
+          {/* Finnhub */}
+          <section aria-labelledby="section-finnhub">
             <div className="flex items-center justify-between mb-3">
-              <h3 id="section-fmp" className="text-[0.75rem] font-mono text-[#555555] uppercase tracking-[0.08em]">
-                FMP
+              <h3 id="section-finnhub" className="text-[0.75rem] font-mono text-[#555555] uppercase tracking-[0.08em]">
+                Finnhub
               </h3>
               <Toggle
-                checked={providers.FMP.enabled}
-                onChange={v => setProviderConfig('FMP', { enabled: v })}
+                checked={providers.FINNHUB.enabled}
+                onChange={v => setProviderConfig('FINNHUB', { enabled: v })}
               />
             </div>
             <ApiKeyField
-              source="FMP"
-              placeholder="Your FMP API key"
-              validate={validateFmp}
+              source="FINNHUB"
+              placeholder="Your Finnhub API key"
+              hint="Free tier: 60 calls/min — finnhub.io"
+              validate={validateFinnhub}
             />
             <div className="mt-3 space-y-1">
               <label className="text-[0.75rem] text-[#555555]">Poll interval (s)</label>
               <Input
                 type="number"
                 min={10}
-                value={providers.FMP.poll_interval_ms / 1000}
-                onChange={e => useConfigStore.getState().setPollInterval('FMP', Number(e.target.value) * 1000)}
-                aria-label="FMP poll interval"
+                value={providers.FINNHUB.poll_interval_ms / 1000}
+                onChange={e => useConfigStore.getState().setPollInterval('FINNHUB', Number(e.target.value) * 1000)}
+                aria-label="Finnhub poll interval"
               />
             </div>
+          </section>
+
+          {/* Gemini Sentiment */}
+          <section aria-labelledby="section-gemini">
+            <h3 id="section-gemini" className="text-[0.75rem] font-mono text-[#555555] uppercase tracking-[0.08em] mb-3">
+              Gemini Sentiment
+            </h3>
+            <div className="flex items-center gap-2">
+              <Input
+                type="password"
+                value={geminiInput}
+                onChange={e => { setGeminiInput(e.target.value); setGeminiTestStatus('idle') }}
+                placeholder="Your Gemini API key"
+                className="flex-1"
+              />
+              <Button
+                variant="primary"
+                onClick={() => validateGemini(geminiInput)}
+                disabled={!geminiInput || geminiTestStatus === 'testing'}
+              >
+                {geminiTestStatus === 'testing' ? '…' : 'Save'}
+              </Button>
+              <StatusBadge status={geminiTestStatus} />
+            </div>
+            <p className="mt-1.5 text-[0.75rem] text-[#555555]">
+              Free tier: 15 req/min. Articles are batched and analysed in the background — ai.google.dev
+            </p>
           </section>
 
           {/* Alpaca */}

@@ -13,6 +13,10 @@ export interface Article {
   published_at: string          // ISO 8601 UTC
   ingested_at: string           // ISO 8601 UTC
   sentiment?: 'bullish' | 'bearish' | 'neutral'
+  sentiment_score?: number         // Gemini: -1 to +1
+  sentiment_summary?: string       // Gemini: one-sentence summary
+  sentiment_confidence?: number    // Gemini: 0 to 1
+  sentiment_key_factors?: string[] // Gemini: top 3 factors
   category?: string
   image_url?: string
   is_breaking?: boolean

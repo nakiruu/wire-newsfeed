@@ -5,11 +5,6 @@ import { Tooltip } from '../ui/Tooltip'
 import { useRelativeTime } from '../../hooks/useRelativeTime'
 import type { Article } from '../../providers/types'
 
-const SENTIMENT_COLORS = {
-  bullish: 'bg-[#00C853]',
-  bearish: 'bg-[#FF4444]',
-  neutral: 'bg-[#555555]',
-} as const
 
 export function ArticleCard({ article, focused, onReaderOpen }: {
   article: Article
@@ -92,18 +87,45 @@ export function ArticleCard({ article, focused, onReaderOpen }: {
         )}
 
         {/* Row 4: sentiment + also reported by */}
-        {(article.sentiment || (article.also_reported_by && article.also_reported_by.length > 0)) && (
-          <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-            {article.sentiment && (
-              <span
-                className={`w-1.5 h-1.5 rounded-full ${SENTIMENT_COLORS[article.sentiment]}`}
-                aria-label={article.sentiment}
-              />
-            )}
-            {article.also_reported_by && article.also_reported_by.length > 0 && (
-              <span className="text-[0.75rem] text-[#555555]">
-                Also: {article.also_reported_by.join(', ')}
-              </span>
+        {(article.sentiment || article.sentiment_score !== undefined || (article.also_reported_by && article.also_reported_by.length > 0)) && (
+          <div className="flex flex-col gap-1 mt-1.5">
+            <div className="flex items-center gap-2 flex-wrap">
+              {(article.sentiment || article.sentiment_score !== undefined) && (
+                <span
+                  className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                    (article.sentiment_score !== undefined
+                      ? article.sentiment_score > 0.2
+                      : article.sentiment === 'bullish')
+                      ? 'bg-[#00C853]'
+                      : (article.sentiment_score !== undefined
+                          ? article.sentiment_score < -0.2
+                          : article.sentiment === 'bearish')
+                        ? 'bg-[#FF4444]'
+                        : 'bg-[#555555]'
+                  }`}
+                  aria-label={article.sentiment ?? 'neutral'}
+                />
+              )}
+              {article.sentiment_score !== undefined && (
+                <span className="text-[0.7rem] font-mono text-[#555555]">
+                  {article.sentiment_score > 0 ? '+' : ''}{article.sentiment_score.toFixed(2)}
+                </span>
+              )}
+              {article.sentiment_confidence !== undefined && (
+                <span className="text-[0.7rem] text-[#555555]">
+                  {Math.round(article.sentiment_confidence * 100)}% conf
+                </span>
+              )}
+              {article.also_reported_by && article.also_reported_by.length > 0 && (
+                <span className="text-[0.75rem] text-[#555555]">
+                  Also: {article.also_reported_by.join(', ')}
+                </span>
+              )}
+            </div>
+            {article.sentiment_summary && (
+              <p className="text-[0.7rem] text-[#555555] italic leading-[1.4]">
+                {article.sentiment_summary}
+              </p>
             )}
           </div>
         )}

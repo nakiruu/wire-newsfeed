@@ -1,6 +1,7 @@
 import Parser from 'rss-parser'
 import type { Article, NewsProvider, FetchParams } from './types'
 import { articleId } from '../lib/hash'
+import { extractSymbols } from './normalize'
 import { proxyFetch } from '../lib/api'
 
 const SEC_FEEDS = [
@@ -38,7 +39,7 @@ export class SECProvider implements NewsProvider {
             url,
             source: 'SEC' as const,
             provider_label: 'SEC EDGAR',
-            symbols: [],
+            symbols: extractSymbols(item.title ?? ''),
             published_at: item.pubDate ? new Date(item.pubDate).toISOString() : now,
             ingested_at: now,
             category: 'SEC Filings',

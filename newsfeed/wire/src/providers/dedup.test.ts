@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+﻿import { describe, it, expect } from 'vitest'
 import { exactDedup, buildBigrams, jaccardSimilarity, fuzzyDedup } from './dedup'
 import type { Article } from './types'
 
@@ -7,8 +7,8 @@ const makeArticle = (overrides: Partial<Article>): Article => ({
   title: 'Apple Reports Record Earnings',
   summary: 'Apple Inc reported record quarterly earnings.',
   url: 'https://example.com/apple',
-  source: 'FMP',
-  provider_label: 'FMP',
+  source: 'FINNHUB',
+  provider_label: 'FINNHUB',
   symbols: ['AAPL'],
   published_at: new Date().toISOString(),
   ingested_at: new Date().toISOString(),
@@ -55,7 +55,7 @@ describe('fuzzyDedup', () => {
     const base = new Date()
     const a1 = makeArticle({
       id: 'FMP:1', title: 'Apple Reports Record Quarterly Earnings Beat',
-      source: 'FMP', provider_label: 'FMP',
+      source: 'FINNHUB', provider_label: 'FINNHUB',
       published_at: base.toISOString(),
     })
     const a2 = makeArticle({

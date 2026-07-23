@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from '@testing-library/react'
+﻿import { render, screen, fireEvent } from '@testing-library/react'
 import { ArticleCard } from './ArticleCard'
 import { useFeedStore } from '../../stores/feedStore'
 import type { Article } from '../../providers/types'
@@ -8,8 +8,8 @@ const baseArticle: Article = {
   title: 'Fed raises rates',
   summary: 'The Federal Reserve raised interest rates by 25 basis points.',
   url: 'https://example.com/fed',
-  source: 'FMP',
-  provider_label: 'FMP',
+  source: 'FINNHUB',
+  provider_label: 'FINNHUB',
   symbols: ['SPY', 'TLT'],
   published_at: new Date(Date.now() - 4 * 60 * 1000).toISOString(),
   ingested_at: new Date().toISOString(),
@@ -44,7 +44,7 @@ describe('ArticleCard', () => {
 
   it('renders source label', () => {
     render(<ArticleCard article={baseArticle} />)
-    expect(screen.getByText('FMP')).toBeInTheDocument()
+    expect(screen.getByText('FINNHUB')).toBeInTheDocument()
   })
 
   it('renders relative time', () => {

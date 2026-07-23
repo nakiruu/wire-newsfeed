@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from '@testing-library/react'
+﻿import { render, screen, fireEvent } from '@testing-library/react'
 import { NewArticlesBanner } from './NewArticlesBanner'
 import { useFeedStore } from '../../stores/feedStore'
 import type { Article } from '../../providers/types'
@@ -9,8 +9,8 @@ function makeArticle(id: string): Article {
     title: `Article ${id}`,
     summary: 'Summary',
     url: `https://example.com/${id}`,
-    source: 'FMP',
-    provider_label: 'FMP',
+    source: 'FINNHUB',
+    provider_label: 'FINNHUB',
     symbols: [],
     published_at: new Date().toISOString(),
     ingested_at: new Date().toISOString(),
@@ -37,13 +37,13 @@ describe('NewArticlesBanner', () => {
   it('renders banner with correct count for singular pending article', () => {
     useFeedStore.setState({ pendingArticles: [makeArticle('p1')] })
     render(<NewArticlesBanner onFlush={vi.fn()} />)
-    expect(screen.getByText(/↑ 1 new article$/)).toBeInTheDocument()
+    expect(screen.getByText(/â†‘ 1 new article$/)).toBeInTheDocument()
   })
 
   it('renders banner with correct count for plural pending articles', () => {
     useFeedStore.setState({ pendingArticles: [makeArticle('p1'), makeArticle('p2'), makeArticle('p3')] })
     render(<NewArticlesBanner onFlush={vi.fn()} />)
-    expect(screen.getByText(/↑ 3 new articles/)).toBeInTheDocument()
+    expect(screen.getByText(/â†‘ 3 new articles/)).toBeInTheDocument()
   })
 
   it('calls onFlush when banner button is clicked', () => {

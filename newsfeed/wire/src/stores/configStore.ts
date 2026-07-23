@@ -5,19 +5,22 @@ import { DEFAULT_POLL_INTERVALS } from '../lib/constants'
 
 // Build-time defaults from .env (VITE_ prefix makes them available in the browser bundle)
 const ENV_CORS_PROXY   = (import.meta.env.VITE_CORS_PROXY_URL          as string) || ''
-const ENV_FMP_KEY      = (import.meta.env.VITE_FMP_API_KEY              as string) || ''
+const ENV_FINNHUB_KEY  = (import.meta.env.VITE_FINNHUB_API_KEY          as string) || ''
 const ENV_ALPACA_KEY   = (import.meta.env.VITE_ALPACA_API_KEY           as string) || ''
+const ENV_GEMINI_KEY   = (import.meta.env.VITE_GEMINI_API_KEY           as string) || ''
 const ENV_EXTRACTOR    = (import.meta.env.VITE_ARTICLE_EXTRACTOR_URL    as string) || ''
 
 interface ConfigState {
   corsProxyUrl: string
   articleExtractorUrl: string
+  geminiApiKey: string
   providers: Record<ProviderSource, ProviderConfig>
   watchlistSymbols: string[]
   displayDensity: 'compact' | 'comfortable'
   autoRefresh: boolean
   setCorsProxyUrl(url: string): void
   setArticleExtractorUrl(url: string): void
+  setGeminiApiKey(key: string): void
   setProviderConfig(source: ProviderSource, config: Partial<ProviderConfig>): void
   setProviderError(source: ProviderSource, error: string): void
   clearProviderError(source: ProviderSource): void
@@ -30,11 +33,11 @@ interface ConfigState {
 
 function defaultProviders(): Record<ProviderSource, ProviderConfig> {
   return {
-    FMP:     { enabled: !!ENV_FMP_KEY,    api_key: ENV_FMP_KEY,    poll_interval_ms: DEFAULT_POLL_INTERVALS.FMP,     consecutiveFailures: 0 },
-    ALPACA:  { enabled: !!ENV_ALPACA_KEY, api_key: ENV_ALPACA_KEY, poll_interval_ms: DEFAULT_POLL_INTERVALS.ALPACA,  consecutiveFailures: 0 },
-    RSS:     { enabled: true,                                       poll_interval_ms: DEFAULT_POLL_INTERVALS.RSS,     consecutiveFailures: 0 },
-    SEC:     { enabled: true,                                       poll_interval_ms: DEFAULT_POLL_INTERVALS.SEC,     consecutiveFailures: 0 },
-    WEBHOOK: { enabled: false,                                      poll_interval_ms: DEFAULT_POLL_INTERVALS.WEBHOOK, consecutiveFailures: 0 },
+    FINNHUB: { enabled: !!ENV_FINNHUB_KEY, api_key: ENV_FINNHUB_KEY, poll_interval_ms: DEFAULT_POLL_INTERVALS.FINNHUB,  consecutiveFailures: 0 },
+    ALPACA:  { enabled: !!ENV_ALPACA_KEY,  api_key: ENV_ALPACA_KEY,  poll_interval_ms: DEFAULT_POLL_INTERVALS.ALPACA,   consecutiveFailures: 0 },
+    RSS:     { enabled: true,                                         poll_interval_ms: DEFAULT_POLL_INTERVALS.RSS,      consecutiveFailures: 0 },
+    SEC:     { enabled: true,                                         poll_interval_ms: DEFAULT_POLL_INTERVALS.SEC,      consecutiveFailures: 0 },
+    WEBHOOK: { enabled: false,                                        poll_interval_ms: DEFAULT_POLL_INTERVALS.WEBHOOK,  consecutiveFailures: 0 },
   }
 }
 
@@ -44,6 +47,7 @@ function persist(state: ConfigState): void {
   localStorage.setItem(STORAGE_KEY, JSON.stringify({
     corsProxyUrl: state.corsProxyUrl,
     articleExtractorUrl: state.articleExtractorUrl,
+    geminiApiKey: state.geminiApiKey,
     providers: Object.fromEntries(
       Object.entries(state.providers).map(([k, v]) => [k, {
         enabled: v.enabled, api_key: v.api_key,
@@ -68,24 +72,26 @@ function loadFromStorage(): Partial<ConfigState> {
       ...parsed,
       corsProxyUrl: parsed.corsProxyUrl || ENV_CORS_PROXY,
       articleExtractorUrl: parsed.articleExtractorUrl || ENV_EXTRACTOR,
+      geminiApiKey: parsed.geminiApiKey || ENV_GEMINI_KEY,
       providers: {
         ...defaults,
         ...parsed.providers,
-        FMP:    { ...defaults.FMP,    ...parsed.providers?.FMP,    api_key: parsed.providers?.FMP?.api_key    || ENV_FMP_KEY },
-        ALPACA: { ...defaults.ALPACA, ...parsed.providers?.ALPACA, api_key: parsed.providers?.ALPACA?.api_key || ENV_ALPACA_KEY },
+        FINNHUB: { ...defaults.FINNHUB, ...parsed.providers?.FINNHUB, api_key: parsed.providers?.FINNHUB?.api_key || ENV_FINNHUB_KEY },
+        ALPACA:  { ...defaults.ALPACA,  ...parsed.providers?.ALPACA,  api_key: parsed.providers?.ALPACA?.api_key  || ENV_ALPACA_KEY },
       },
     }
   } catch { return {} }
 }
 
 export const useConfigStore = create<ConfigState>((set, get) => ({
-  corsProxyUrl: ENV_CORS_PROXY, articleExtractorUrl: ENV_EXTRACTOR,
+  corsProxyUrl: ENV_CORS_PROXY, articleExtractorUrl: ENV_EXTRACTOR, geminiApiKey: ENV_GEMINI_KEY,
   providers: defaultProviders(), watchlistSymbols: [],
   displayDensity: 'comfortable', autoRefresh: true,
   ...loadFromStorage(),
 
   setCorsProxyUrl(url) { set({ corsProxyUrl: url }); persist(get()) },
   setArticleExtractorUrl(url) { set({ articleExtractorUrl: url }); persist(get()) },
+  setGeminiApiKey(key) { set({ geminiApiKey: key }); persist(get()) },
 
   setProviderConfig(source, config) {
     set(s => ({ providers: { ...s.providers, [source]: { ...s.providers[source], ...config } } }))

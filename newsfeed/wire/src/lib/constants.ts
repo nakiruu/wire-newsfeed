@@ -13,7 +13,7 @@ export const CATEGORIES = [
 export type Category = typeof CATEGORIES[number]
 
 export const PROVIDER_LABELS: Record<ProviderSource, string> = {
-  FMP: 'FMP',
+  FINNHUB: 'Finnhub',
   ALPACA: 'Alpaca',
   RSS: 'RSS',
   SEC: 'SEC EDGAR',
@@ -21,7 +21,7 @@ export const PROVIDER_LABELS: Record<ProviderSource, string> = {
 }
 
 export const DEFAULT_POLL_INTERVALS: Record<ProviderSource, number> = {
-  FMP: 60_000,
+  FINNHUB: 60_000,
   ALPACA: 30_000,
   RSS: 300_000,
   SEC: 600_000,

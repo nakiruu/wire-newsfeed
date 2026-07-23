@@ -1,7 +1,7 @@
 import Parser from 'rss-parser'
 import type { Article, NewsProvider, FetchParams } from './types'
 import { articleId } from '../lib/hash'
-import { stripHtml } from './normalize'
+import { stripHtml, extractSymbols } from './normalize'
 import { proxyFetch } from '../lib/api'
 import { DEFAULT_RSS_FEEDS } from '../lib/constants'
 
@@ -26,14 +26,16 @@ export class RSSProvider implements NewsProvider {
         for (const item of feed.items ?? []) {
           const url = item.link ?? item.guid ?? ''
           if (!url) continue
+          const title = item.title ?? ''
+          const summary = stripHtml(item.contentSnippet ?? item.summary ?? item.content ?? '').slice(0, 400)
           results.push({
             id: articleId(url, 'RSS'),
-            title: item.title ?? '',
-            summary: stripHtml(item.contentSnippet ?? item.summary ?? item.content ?? '').slice(0, 400),
+            title,
+            summary,
             url,
             source: 'RSS',
             provider_label: feed.title ?? 'RSS',
-            symbols: [],
+            symbols: extractSymbols(title + ' ' + summary),
             published_at: item.pubDate ? new Date(item.pubDate).toISOString() : now,
             ingested_at: now,
           })

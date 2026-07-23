@@ -1,16 +1,16 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+﻿import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { ProviderCoordinator } from './coordinator'
 import { useFeedStore } from '../stores/feedStore'
 import type { NewsProvider, Article } from '../providers/types'
 
 const makeArticle = (id: string): Article => ({
   id, title: 'Test', summary: '', url: `https://example.com/${id}`,
-  source: 'FMP', provider_label: 'FMP', symbols: [],
+  source: 'FINNHUB', provider_label: 'FINNHUB', symbols: [],
   published_at: new Date().toISOString(), ingested_at: new Date().toISOString(),
 })
 
 const makeProvider = (articles: Article[]): NewsProvider => ({
-  name: 'FMP', poll_interval_ms: 100,
+  name: 'FINNHUB', poll_interval_ms: 100,
   rate_limit: { requests: 10, window_ms: 1000 },
   fetch: vi.fn().mockResolvedValue(articles),
 })

@@ -1,10 +1,10 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+﻿import { describe, it, expect, beforeEach } from 'vitest'
 import { useFeedStore } from './feedStore'
 import type { Article } from '../providers/types'
 
 const makeArticle = (id: string, published_at?: string): Article => ({
   id, title: `Article ${id}`, summary: '', url: `https://example.com/${id}`,
-  source: 'FMP', provider_label: 'FMP', symbols: [],
+  source: 'FINNHUB', provider_label: 'FINNHUB', symbols: [],
   published_at: published_at ?? new Date().toISOString(),
   ingested_at: new Date().toISOString(),
 })

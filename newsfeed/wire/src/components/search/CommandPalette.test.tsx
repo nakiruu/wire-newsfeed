@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+﻿import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { CommandPalette } from './CommandPalette'
 import { useFeedStore } from '../../stores/feedStore'
@@ -10,12 +10,12 @@ vi.mock('../../hooks/useArticleSearch', () => ({
     const articles: Article[] = [
       {
         id: '1', title: 'Apple earnings beat expectations', summary: 'Apple Q1 results',
-        url: 'https://example.com/1', source: 'FMP', provider_label: 'FMP',
+        url: 'https://example.com/1', source: 'FINNHUB', provider_label: 'FINNHUB',
         symbols: ['AAPL'], published_at: new Date().toISOString(), ingested_at: new Date().toISOString(),
       },
       {
         id: '2', title: 'Tesla delivery numbers disappoint', summary: 'Tesla missed estimates',
-        url: 'https://example.com/2', source: 'FMP', provider_label: 'FMP',
+        url: 'https://example.com/2', source: 'FINNHUB', provider_label: 'FINNHUB',
         symbols: ['TSLA'], published_at: new Date().toISOString(), ingested_at: new Date().toISOString(),
       },
       {

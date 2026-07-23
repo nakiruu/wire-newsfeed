@@ -1,4 +1,4 @@
-import { create } from 'zustand'
+﻿import { create } from 'zustand'
 import type { ProviderSource } from '../lib/hash'
 import { useFeedStore } from './feedStore'
 
@@ -14,7 +14,7 @@ interface FilterState {
 
 export const useFilterStore = create<FilterState>((set, get) => ({
   activeCategory: null,
-  activeSources: new Set<ProviderSource>(['FMP', 'ALPACA', 'RSS', 'SEC']),
+  activeSources: new Set<ProviderSource>(['FINNHUB', 'ALPACA', 'RSS', 'SEC']),
   searchQuery: '',
 
   setCategory(category) { set({ activeCategory: category }) },

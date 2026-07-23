@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+﻿import { useState, useEffect } from 'react'
 import { useConfigStore } from '../../stores/configStore'
 import { useFilterStore } from '../../stores/filterStore'
 import { useFeedStore } from '../../stores/feedStore'
@@ -24,7 +24,7 @@ function WatchlistItem({ symbol, apiKey }: { symbol: string; apiKey?: string }) 
     <div className="flex items-center justify-between py-1.5">
       <span className="font-mono text-[0.8125rem] text-[#EDEDED]">{symbol}</span>
       <span className={`font-mono text-[0.8125rem] ${color}`}>
-        {pct === null ? '—' : `${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%`}
+        {pct === null ? 'â€”' : `${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%`}
       </span>
     </div>
   )
@@ -40,13 +40,13 @@ export function buildSparklineData(articles: { ingested_at: string }[]): { data:
   return { data, currentHourIndex: 23 }
 }
 
-const DISPLAY_SOURCES: ProviderSource[] = ['FMP', 'ALPACA', 'RSS', 'SEC']
+const DISPLAY_SOURCES: ProviderSource[] = ['FINNHUB', 'ALPACA', 'RSS', 'SEC']
 
 export function Sidebar({ onSettingsOpen }: { onSettingsOpen(): void }) {
   const { providers, watchlistSymbols } = useConfigStore()
   const { toggleSource, activeSources } = useFilterStore()
   const allArticles = useFeedStore(s => s.articles)
-  const fmpKey = providers.FMP?.api_key
+  const fmpKey = providers.FINNHUB?.api_key
   const { data, currentHourIndex } = buildSparklineData(allArticles)
 
   return (
@@ -99,7 +99,7 @@ export function Sidebar({ onSettingsOpen }: { onSettingsOpen(): void }) {
           onClick={onSettingsOpen}
           className="mt-3 text-[0.75rem] text-[#0070F3] hover:opacity-80 transition-opacity"
         >
-          Configure →
+          Configure â†’
         </button>
       </section>
 

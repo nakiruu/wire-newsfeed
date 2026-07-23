@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+﻿import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { SettingsPanel } from './SettingsPanel'
 import { useConfigStore } from '../../stores/configStore'
 
@@ -7,7 +7,7 @@ beforeEach(() => {
   useConfigStore.setState({
     corsProxyUrl: '',
     providers: {
-      FMP: { enabled: true, poll_interval_ms: 60000, consecutiveFailures: 0 },
+      FINNHUB: { enabled: true, poll_interval_ms: 60000, consecutiveFailures: 0 },
       ALPACA: { enabled: true, poll_interval_ms: 30000, consecutiveFailures: 0 },
       RSS: { enabled: true, poll_interval_ms: 300000, consecutiveFailures: 0, custom_feeds: [] },
       SEC: { enabled: true, poll_interval_ms: 600000, consecutiveFailures: 0 },
@@ -32,7 +32,7 @@ describe('SettingsPanel', () => {
     expect(screen.getByText('Settings')).toBeInTheDocument()
   })
 
-  it('calls onClose when the × button is clicked', () => {
+  it('calls onClose when the Ã— button is clicked', () => {
     const onClose = vi.fn()
     render(<SettingsPanel open={true} onClose={onClose} />)
     fireEvent.click(screen.getByLabelText('Close settings'))
@@ -86,7 +86,7 @@ describe('SettingsPanel', () => {
       expect(useConfigStore.getState().corsProxyUrl).toBe('http://localhost:8080')
     })
 
-    it('shows ✓ badge after successful proxy test', async () => {
+    it('shows âœ“ badge after successful proxy test', async () => {
       useConfigStore.setState({ corsProxyUrl: 'http://proxy.local:8080' })
       vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true }))
       render(<SettingsPanel open={true} onClose={() => {}} />)
@@ -97,7 +97,7 @@ describe('SettingsPanel', () => {
       expect(fetch).toHaveBeenCalledWith('http://proxy.local:8080/https://httpbin.org/get')
     })
 
-    it('shows ✗ badge when proxy test returns non-ok response', async () => {
+    it('shows âœ— badge when proxy test returns non-ok response', async () => {
       useConfigStore.setState({ corsProxyUrl: 'http://proxy.local:8080' })
       vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false }))
       render(<SettingsPanel open={true} onClose={() => {}} />)
@@ -107,7 +107,7 @@ describe('SettingsPanel', () => {
       })
     })
 
-    it('shows ✗ badge when proxy test throws', async () => {
+    it('shows âœ— badge when proxy test throws', async () => {
       useConfigStore.setState({ corsProxyUrl: 'http://proxy.local:8080' })
       vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('Network error')))
       render(<SettingsPanel open={true} onClose={() => {}} />)
@@ -119,15 +119,15 @@ describe('SettingsPanel', () => {
   })
 
   describe('Provider toggles', () => {
-    it('toggles FMP provider on/off', () => {
+    it('toggles FINNHUB provider on/off', () => {
       render(<SettingsPanel open={true} onClose={() => {}} />)
-      // FMP toggle is the first switch (after finding all switches)
+      // FINNHUB toggle is the first switch (after finding all switches)
       const switches = screen.getAllByRole('switch')
-      // switches: FMP, ALPACA, RSS, SEC, autoRefresh
+      // switches: FINNHUB, ALPACA, RSS, SEC, autoRefresh
       const fmpSwitch = switches[0]
       expect(fmpSwitch).toHaveAttribute('aria-checked', 'true')
       fireEvent.click(fmpSwitch)
-      expect(useConfigStore.getState().providers.FMP.enabled).toBe(false)
+      expect(useConfigStore.getState().providers.FINNHUB.enabled).toBe(false)
     })
 
     it('toggles Alpaca provider on/off', () => {

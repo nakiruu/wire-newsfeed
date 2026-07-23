@@ -3,10 +3,11 @@ import { exactDedup, fuzzyDedup } from '../providers/dedup'
 import { useFeedStore } from '../stores/feedStore'
 import { useConfigStore } from '../stores/configStore'
 import { loadCachedArticles } from '../lib/storage'
-import { FMPProvider } from '../providers/fmp.provider'
+import { FinnhubProvider } from '../providers/finnhub.provider'
 import { AlpacaProvider } from '../providers/alpaca.provider'
 import { RSSProvider } from '../providers/rss.provider'
 import { SECProvider } from '../providers/sec.provider'
+import { getSentimentAnalyzer } from './sentiment'
 
 interface ProviderEntry {
   provider: NewsProvider
@@ -30,6 +31,8 @@ export class ProviderCoordinator {
     if (this._isRunning) return
     this._isRunning = true
 
+    getSentimentAnalyzer().start()
+
     // Seed knownIds from articles already in the feed (synchronous path)
     const existingArticles = useFeedStore.getState().articles
     for (const a of existingArticles) this.knownIds.add(a.id)
@@ -42,7 +45,6 @@ export class ProviderCoordinator {
       }
       this._startPolling()
     }).catch(() => {
-      // IDB unavailable — proceed without cache
       this._startPolling()
     })
   }
@@ -57,10 +59,8 @@ export class ProviderCoordinator {
       }
       this.entries.push(entry)
 
-      // Immediate first poll
       void this.poll(entry)
 
-      // Recurring interval
       entry.timer = setInterval(
         () => void this.poll(entry),
         provider.poll_interval_ms,
@@ -77,6 +77,7 @@ export class ProviderCoordinator {
     }
     this.entries = []
     this._isRunning = false
+    getSentimentAnalyzer().stop()
   }
 
   private async poll(entry: ProviderEntry): Promise<void> {
@@ -89,8 +90,11 @@ export class ProviderCoordinator {
         const merged = fuzzyDedup(deduped)
         for (const a of merged) this.knownIds.add(a.id)
 
-        // First poll per provider goes straight to visible feed; subsequent to pending
         useFeedStore.getState().addArticles(merged, entry.isFirstPoll)
+
+        // Queue new articles for Gemini sentiment analysis
+        const analyzer = getSentimentAnalyzer()
+        for (const article of merged) analyzer.enqueue(article)
       }
 
       entry.isFirstPoll = false
@@ -101,7 +105,6 @@ export class ProviderCoordinator {
       const message = err instanceof Error ? err.message : 'Unknown error'
       useConfigStore.getState().setProviderError(provider.name, message)
 
-      // Exponential backoff: reschedule with capped interval
       const baseInterval = provider.poll_interval_ms
       const backoffInterval = Math.min(
         baseInterval * Math.pow(2, entry.consecutiveFailures),
@@ -112,7 +115,6 @@ export class ProviderCoordinator {
         clearInterval(entry.timer)
         entry.timer = setTimeout(() => {
           void this.poll(entry)
-          // Resume normal interval after one backoff attempt
           entry.timer = setInterval(
             () => void this.poll(entry),
             baseInterval,
@@ -127,8 +129,8 @@ export function createCoordinator(): ProviderCoordinator {
   const { providers } = useConfigStore.getState()
   const active: NewsProvider[] = []
 
-  if (providers.FMP.enabled && providers.FMP.api_key) {
-    active.push(new FMPProvider(providers.FMP.api_key))
+  if (providers.FINNHUB.enabled && providers.FINNHUB.api_key) {
+    active.push(new FinnhubProvider(providers.FINNHUB.api_key))
   }
 
   if (providers.ALPACA.enabled && providers.ALPACA.api_key) {
@@ -147,7 +149,6 @@ export function createCoordinator(): ProviderCoordinator {
   return new ProviderCoordinator(active)
 }
 
-// Singleton instance — created lazily on first access
 let _coordinator: ProviderCoordinator | null = null
 
 export function getCoordinator(): ProviderCoordinator {

@@ -1,4 +1,4 @@
-export type ProviderSource = 'FMP' | 'ALPACA' | 'RSS' | 'SEC' | 'WEBHOOK'
+export type ProviderSource = 'FINNHUB' | 'ALPACA' | 'RSS' | 'SEC' | 'WEBHOOK'
 
 function simpleHash(str: string): string {
   let h = 0

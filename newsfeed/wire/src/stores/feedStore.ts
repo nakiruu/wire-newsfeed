@@ -3,6 +3,8 @@ import type { Article } from '../providers/types'
 import { exactDedup } from '../providers/dedup'
 import { saveReadIds, loadReadIds, saveBookmarkIds, loadBookmarkIds, cacheArticles } from '../lib/storage'
 
+type SentimentPatch = Pick<Article, 'sentiment' | 'sentiment_score' | 'sentiment_summary' | 'sentiment_confidence' | 'sentiment_key_factors'>
+
 interface FeedState {
   articles: Article[]
   pendingArticles: Article[]
@@ -14,6 +16,7 @@ interface FeedState {
   markRead(id: string): void
   toggleBookmark(id: string): void
   setFocusedIndex(index: number): void
+  updateArticleSentiment(id: string, data: SentimentPatch): void
 }
 
 function sortDesc(articles: Article[]): Article[] {
@@ -69,5 +72,12 @@ export const useFeedStore = create<FeedState>((set, get) => ({
 
   setFocusedIndex(index) {
     set({ focusedIndex: index })
+  },
+
+  updateArticleSentiment(id, data) {
+    set(s => ({
+      articles: s.articles.map(a => a.id === id ? { ...a, ...data } : a),
+      pendingArticles: s.pendingArticles.map(a => a.id === id ? { ...a, ...data } : a),
+    }))
   },
 }))

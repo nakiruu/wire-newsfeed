@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+﻿import { describe, it, expect, beforeEach } from 'vitest'
 import { renderHook } from '@testing-library/react'
 import { useFeedStore } from '../stores/feedStore'
 import { useArticleSearch } from './useArticleSearch'
@@ -9,8 +9,8 @@ function makeArticle(overrides: Partial<Article> & { id: string }): Article {
     title: `Article ${overrides.id}`,
     summary: '',
     url: `https://example.com/${overrides.id}`,
-    source: 'FMP',
-    provider_label: 'FMP',
+    source: 'FINNHUB',
+    provider_label: 'FINNHUB',
     symbols: [],
     published_at: new Date().toISOString(),
     ingested_at: new Date().toISOString(),

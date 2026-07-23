@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from '@testing-library/react'
+﻿import { render, screen, fireEvent } from '@testing-library/react'
 import { ArticleFeed } from './ArticleFeed'
 import { useFeedStore } from '../../stores/feedStore'
 import { useFilterStore } from '../../stores/filterStore'
@@ -27,8 +27,8 @@ function makeArticle(id: string, overrides: Partial<Article> = {}): Article {
     title: `Article ${id}`,
     summary: `Summary for ${id}`,
     url: `https://example.com/${id}`,
-    source: 'FMP',
-    provider_label: 'FMP',
+    source: 'FINNHUB',
+    provider_label: 'FINNHUB',
     symbols: ['AAPL'],
     published_at: new Date(Date.now() - 1000).toISOString(),
     ingested_at: new Date().toISOString(),
@@ -46,7 +46,7 @@ beforeEach(() => {
   })
   useFilterStore.setState({
     activeCategory: null,
-    activeSources: new Set(['FMP', 'ALPACA', 'RSS', 'SEC']),
+    activeSources: new Set(['FINNHUB', 'ALPACA', 'RSS', 'SEC']),
     searchQuery: '',
   })
 })
@@ -105,7 +105,7 @@ describe('ArticleFeed', () => {
   it('calls onConfigureClick when EmptyState configure button is clicked', () => {
     const onConfigureClick = vi.fn()
     render(<ArticleFeed focusedIndex={0} onConfigureClick={onConfigureClick} />)
-    fireEvent.click(screen.getByText('Configure sources →'))
+    fireEvent.click(screen.getByText('Configure sources â†’'))
     expect(onConfigureClick).toHaveBeenCalledTimes(1)
   })
 
@@ -120,7 +120,7 @@ describe('ArticleFeed', () => {
       pendingArticles: [makeArticle('p1')],
     })
     render(<ArticleFeed focusedIndex={0} onConfigureClick={vi.fn()} />)
-    expect(screen.getByText(/↑ 1 new article/)).toBeInTheDocument()
+    expect(screen.getByText(/â†‘ 1 new article/)).toBeInTheDocument()
   })
 
   it('does not show NewArticlesBanner when pendingArticles is empty', () => {
