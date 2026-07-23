@@ -2,8 +2,10 @@ import type { Article } from '../providers/types'
 import { useFeedStore } from '../stores/feedStore'
 import { useConfigStore } from '../stores/configStore'
 
+// gemini-1.5-flash has its own separate daily quota from gemini-2.0-flash
+const GEMINI_MODEL = 'gemini-1.5-flash'
 const GEMINI_URL =
-  'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent'
+  `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`
 
 // One call per flush, one flush per interval — guaranteed ≤ 15 RPM on the free tier
 const BATCH_SIZE = 5
@@ -62,7 +64,7 @@ Return ONLY a valid JSON array, no other text.`
 async function callGemini(
   prompt: string,
   apiKey: string,
-): Promise<{ results: ArticleResult[]; rateLimited: boolean }> {
+): Promise<{ results: ArticleResult[]; rateLimited: boolean; retryAfterMs?: number }> {
   try {
     const res = await fetch(`${GEMINI_URL}?key=${apiKey}`, {
       method: 'POST',
@@ -73,8 +75,20 @@ async function callGemini(
       }),
     })
 
-    if (res.status === 429) return { results: [], rateLimited: true }
-    if (!res.ok) return { results: [], rateLimited: false }
+    if (res.status === 429) {
+      // Parse retryDelay from the response so backoff is exact
+      try {
+        const body = await res.json() as {
+          error?: { details?: Array<{ retryDelay?: string }> }
+        }
+        const delayStr = body.error?.details?.find(d => d.retryDelay)?.retryDelay ?? '60s'
+        const delaySec = parseInt(delayStr) || 60
+        return { results: [], rateLimited: true, retryAfterMs: (delaySec + 5) * 1000 }
+      } catch {
+        return { results: [], rateLimited: true, retryAfterMs: 65_000 }
+      }
+    }
+    if (!res.ok) return { results: [], rateLimited: false, retryAfterMs: 0 }
 
     const data = await res.json() as {
       candidates?: Array<{ content: { parts: Array<{ text: string }> } }>
@@ -83,9 +97,9 @@ async function callGemini(
     if (!text) return { results: [], rateLimited: false }
 
     const parsed = JSON.parse(text) as ArticleResult[]
-    return { results: Array.isArray(parsed) ? parsed : [], rateLimited: false }
+    return { results: Array.isArray(parsed) ? parsed : [], rateLimited: false, retryAfterMs: 0 }
   } catch {
-    return { results: [], rateLimited: false }
+    return { results: [], rateLimited: false, retryAfterMs: 0 }
   }
 }
 
@@ -121,15 +135,14 @@ class SentimentAnalyzer {
 
     // One Gemini call per flush — guaranteed ≤ 15 RPM
     const batch = this.queue.splice(0, BATCH_SIZE)
-    const { results, rateLimited } = await callGemini(
+    const { results, rateLimited, retryAfterMs } = await callGemini(
       buildSentimentPrompt(batch),
       geminiApiKey,
     )
 
     if (rateLimited) {
-      // Put articles back and wait 60 s before retrying
       this.queue.unshift(...batch)
-      this.blockedUntil = Date.now() + 60_000
+      this.blockedUntil = Date.now() + (retryAfterMs ?? 65_000)
       return
     }
 
